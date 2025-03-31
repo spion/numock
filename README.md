@@ -70,6 +70,8 @@ export def "test real" [] {
 Example module under test:
 
 ```nushell
+# example.nu
+
 use api.nu *
 
 export def get-user-details [id: string] {
