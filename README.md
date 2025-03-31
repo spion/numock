@@ -35,7 +35,7 @@ export def "test example" [] {
   reset-mocks
 
   # Define mock implementations
-  mock-module-define "api.nu" {
+  mock-module "api.nu" {
     # Define the mock versions of functions
     get-user: {|args|
       # Mock implementation
@@ -119,12 +119,8 @@ On the implementation side, for every test file:
 3. The mock copy imports its original module by absolute path, then re-exports all of its member
    functions (found by introspection) as copies that can optinally be mocked through the registry
 
-4. For simplicity, non-mocked dependencies of the MUT that are relative local paths have a "symlink"
-   of them generated using `export use` (todo: can we use actual symlinks?)
-
-   1. Alternatively, we could add the original directory as an include via NU_LIB_DIRS, so that if a
-      module is not found locally in the mocks, its looked up from NU_LIB_DIRS next
+4. We add the original directory as an include via NU_LIB_DIRS, so that if a
+   module is not found locally in the mocks, its looked up from NU_LIB_DIRS next
 
 5. The test module in its temp location is introspected and run. During run time, tests may use the
-   mock-module "module.name" "function_name" {|| impl here } to modify the registry as they please,
-   which would change the results
+   mock-module "module.name" {function_name: {|| impl here }} to modify the mock registry

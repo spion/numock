@@ -1,4 +1,4 @@
-export def --env mock-module-define [module_name: string, mock_impl: record] {
+export def --env mock-module [module_name: string, mock_impl: record] {
   # Store the mock implementation in the registry
   if ($env | get -i NUMOCK_REGISTRY) == null {
     $env.NUMOCK_REGISTRY = {

@@ -4,14 +4,17 @@ use numock.nu *
 use example.nu *
 use std/assert
 
+# Declare the module under test (required)
 export const tested_module = "example.nu"
+
+# Declare the modules that need to be mocked (Mock implementations don't need to be pre-defined)
 export const mocked_modules = ["api.nu"]
 
 export def "test example" [] {
   reset-mocks
 
   # Define mock implementations
-  mock-module-define "api.nu" {
+  mock-module "api.nu" {
     # Define the mock versions of functions
     get-user: {|args|
       # Mock implementation
@@ -38,5 +41,6 @@ export def "test example" [] {
 export def "test real" [] {
   reset-mocks
   let user_id = "123"
-  let result = get-user-details $user_id # will fail because its a real request
+  # will fail because its a real request
+  let result = get-user-details $user_id
 }
