@@ -84,7 +84,7 @@ export def get-user-details [id: string] {
 
 Example mocked module:
 
-```
+```nushell
 # api.nu
 
 # Original get-user

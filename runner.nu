@@ -128,8 +128,6 @@ export def main [test_module] {
   let tested_module = $custom | get tested_module
 
   let mock_dir = mktemp -t -d
-  let te = '.' | path expand
-
 
   $mocked_modules | each {|mock_module|
     let mock_module_content = generate-mock-module $mock_module
@@ -140,7 +138,7 @@ export def main [test_module] {
   cp $tested_module $mock_dir
   cp $test_module $mock_dir
 
-  let target_module_path = $"($mock_dir)/($test_module)"
+
 
   let test_commands = discover-module-functions ($test_module | path expand)
     | where name =~ '^test'
@@ -157,6 +155,7 @@ export def main [test_module] {
     $'print "Running test: ($cmd)"; ($cmd)'
   } | str join "\n"
 
+  let target_module_path = $"($mock_dir)/($test_module)"
   let script = $"source ($target_module_path); ($commands_part)"
   nu --env-config $new_env_config_path -c $script
 }
