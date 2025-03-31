@@ -15,6 +15,91 @@ alternative imperative api:
 - mock "api.md" "fn_name" {|| registry implementation }
   - this means parsing for numock "modulename" to discover modules to be mocked
 
+
+Example test file
+
+```nushell
+# user_service_test.nu
+
+use numock.nu *
+use example.nu *
+use std/assert
+
+# Declare the module under test (required)
+export const tested_module = "example.nu"
+
+# Declare the modules that need to be mocked (Mock implementations don't need to be pre-defined)
+export const mocked_modules = ["api.nu"]
+
+export def "test example" [] {
+  reset-mocks
+
+  # Define mock implementations
+  mock-module-define "api.nu" {
+    # Define the mock versions of functions
+    get-user: {|args|
+      # Mock implementation
+      {
+        first_name: "Test",
+        last_name: "User",
+        email: "test@example.com"
+      }
+    }
+  }
+
+  # Arrange
+  let user_id = "123"
+
+  # Act
+  let result = (get-user-details $user_id)
+
+  # Assert
+  assert ($result.display_name == "Test User")
+  assert ($result.contact == "test@example.com")
+
+}
+
+export def "test real" [] {
+  reset-mocks
+  let user_id = "123"
+  # will fail because its a real request
+  let result = get-user-details $user_id
+}
+```
+
+Example module under test:
+
+```nushell
+use api.nu *
+
+export def get-user-details [id: string] {
+  let user = (get-user $id)  # This calls api.nu's get-user
+  return {
+    id: $id,
+    display_name: $"($user.first_name) ($user.last_name)",
+    contact: $user.email
+  }
+}
+```
+
+Example mocked module:
+
+```
+# api.nu
+
+# Original get-user
+export def get-user [id: string] {
+  # Real implementation that calls external API
+  http get $"https://api.example.com/users/($id)"
+}
+
+# Creates a user
+export def create-user [name: string, email: string] {
+  # Real implementation
+  http post https://api.example.com/users
+}
+```
+
 There are 3 relevant files for every mock
 
 1. test file - the module containing all the tests
@@ -41,28 +126,3 @@ On the implementation side, for every test file:
 5. The test module in its temp location is introspected and run. During run time, tests may use the
    mock-module "module.name" "function_name" {|| impl here } to modify the registry as they please,
    which would change the results
-
-Before implementing this, to derisk the approach, we need to check if we can do this
-
-A simple test would be as follows:
-
-1. Define an env registry that does certain things
-2. Define a function that modifes an item in the registry
-3. define a function that calls an imem in the registry
-
-The experiment worked. Couple of points worth raising:
-
-1. The generated functions must be aware of the arguments of the original. Command introspection
-   should be good enough to do this. The template is something like:
-
-   ```nu
-   export def example_mocked_greeting [arg] { # add additional arguments as needed
-     let f = numock-get-fn "mocked.nu" "mock_fn"
-     if $f != null {
-       do $f $arg
-     } else {
-       # call the originally imported module (must discover the basename)
-       mocked example_mocked_greeting $arg
-     }
-   }
-   ```
